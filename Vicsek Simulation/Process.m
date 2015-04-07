@@ -1,5 +1,4 @@
 
-agents = AddAgents(200, 1);
-agents = Graph(agents, 1, 0.1, 100, 0.125, 10, 0.1);
-
+agents = AddAgents(200, 10);
+agents = Graph(agents, 10, 0, 100, 0.25, 40, 0);
 

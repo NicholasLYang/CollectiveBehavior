@@ -29,14 +29,13 @@ for j = 1:frames
     % Thus, r * e is the repulsion vector. This is added to f. 
     % f is the total sum of all the repulsion vectors.
           f1 = nCor - coords;
-    % Remember, f1 is a vectior pointing from the agent to the neighbor
-          r = (1 + exp(norm(f1)/(sizeOfGraph * 0.1) - 2))^-1;
-          e = (-f1)/norm(f1); 
+          r = (1 + exp(norm(coords - nCor)/(sizeOfGraph * 0.1) - 2))^-1;
+          e = (f1)/norm(f1); 
           if f1 == 0
               e = [0, 0];
           end
           f = f + r * e;
-           distance = norm(f1);
+           distance = norm(coords- nCor);
            if distance < sizeOfGraph/10
                
                nAngle = agents(3, y);
@@ -44,11 +43,11 @@ for j = 1:frames
                    
 
                % Basic Vicsek:
-              % c = dot(direction, f1)/(norm(f1) * norm(direction));
-               %if f1 == 0
-                %   c = 0;
-               %end
-               sumOfDirections = sumOfDirections + nAngle; % * (1 + c) ;
+               c = dot(direction, f1)/(norm(f1) * norm(direction));
+               if f1 == 0
+                   c = 0;
+               end
+               sumOfDirections = sumOfDirections + nAngle * (1 + c) ;
                numOfNeighbors = numOfNeighbors + 1;
 
                
