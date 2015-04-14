@@ -1,12 +1,12 @@
 
-function [agents] = Graph(agents, sizeOfGraph, repulsionConst, frames, speed, fps, eta)
+function [milling, polarization] = Graph(agents, sizeOfGraph, repulsionConst, frames, speed, fps, eta)
 % Gives a total number of agents for the for loop
 numOfAgents = size(agents);
 % Graphs the agents using a quiver plot (adds arrows instead of dots)
-quiver(agents(1,:), agents(2,:), cos(agents(3,:)), sin(agents(3,:)));
-axis([0,sizeOfGraph,0,sizeOfGraph]);
-       
-drawnow;
+polarization = zeros(frames);
+milling = zeros(frames);
+
+
 for j = 1:frames
 
    p = [0 0];  
@@ -83,17 +83,23 @@ for j = 1:frames
      % fprintf('Agent %d has xcor of %d, a ycor of %d and a direction of %d\n', x, agents(1, x), agents(2, x), agents(3,x)); 
     
      p = p + direction;
-      m = m + cross([coords(1) coords(2) 0], [direction(1) direction(2) 0])/norm(coords);
+     m = m + cross([coords 0], [direction 0])/(norm(coords) * speed);
       
    end
-    quiver(agents(1,:), agents(2, :), cos(agents(3,:)), sin(agents(3,:)));
-    axis([0,sizeOfGraph,0,sizeOfGraph]);
-    polarization = norm(p) / numOfAgents(2) ;
-    drawnow;
-    pause(1/fps)
+    polarization(j) = norm(p) / numOfAgents(2);
+    milling(j) = norm(m)/ numOfAgents(2);    
+      
+    % quiver(agents(1,:), agents(2, :), cos(agents(3,:)), sin(agents(3,:)));
+    % axis([0,sizeOfGraph,0,sizeOfGraph]);
     
+    fprintf('Polarization is %d\n', polarization(j));
+    fprintf('Milling is %d\n', milling(j));
+    pause(1/fps)
+    drawnow
 end
 
+%plot(polarization)
+%axis([1,frames,0,2]);
 
 
 
