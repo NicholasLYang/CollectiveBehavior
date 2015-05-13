@@ -12,18 +12,19 @@ public class Board
     private double beta;
     private double repulsionRange;
     // # of agents, area of board, radius of interaction, speed of agents and eta
-    public Board (int n, double a, double r, double s, double e, double b, double rR)
+    public Board (int n, int sizeOfGraph, double r, double s, double e, double b, double rR)
     {
 	rand = new Random();
 	agents = new Agent[n];
-	size = a;
+	size = sizeOfGraph;
+	speed = s;
 	radius = r;
 	eta = e;
 	beta = b;
 	repulsionRange = rR;
 	for (int i = 0; i < n; i++)
 	    {
-		agents[i] = new Agent(a, s);
+		agents[i] = new Agent(sizeOfGraph, s);
 	    }
 	radius = 0;
     }
@@ -75,22 +76,23 @@ public class Board
     public void Vicsek()
     {
 
-	double[] sumOfVelocity;
+	Vector sumOfVelocity;
 	Agent[] neighbors;
 	for (int j = 0; j < agents.length; j++)
 	    {
-		sumOfVelocity = new double[2];
+		sumOfVelocity = new Vector();
 		neighbors = agents[j].findNeighbors(agents, radius);
 		for (int c = 0; c < neighbors.length; c++)
 		    {
-			sumOfVelocity = arrayAddition(arrayAddition(sumOfVelocity, neighbors[c].getVelocity()), arrayMultiply(agents[j].repulsion(neighbors[c], repulsionRange), beta));
+			sumOfVelocity.add(neighbors[c].getVelocity());
 		    }
-		double newDirection = arrayMultiply(sumOfVelocity, 1 / neighbors.length) + eta * Math.PI * (1 - 2 * rand.nextDouble()) % (2 * Math.PI));
+		double newDirection = mod(sumOfVelocity.scalarMultiplication(1/neighbors.length).getTheta() + eta * Math.PI * (1 - 2 * rand.nextDouble()),  Math.PI);
+	
 		double newX = (agents[j].getX() + speed * Math.cos(agents[j].getDirection())) % size;
 		double newY = (agents[j].getY() + speed * Math.sin(agents[j].getDirection())) % size;
 		agents[j].setX(newX);
 		agents[j].setY(newY);
-		agents[j].setDirection(newDirection);
+		agents[j].set(newDirection);
 			
 	    }
 	    
@@ -131,28 +133,23 @@ public class Board
 	return sum/agents.length;
     }
     //------------ Useful Methods ------------\\
+
+// Because the build in java mod doesn't work with negatives. Basically d % m
+public double mod (double x, double n)
+{
+    double r = x % n;
+    if (r > 0 && x < 0)
+	{
+	    r -= n;
+	}
+    return r;
+}
+	    
     public double norm (double[] a)
     {
 	return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
     }
-    public double[] arrayAddition(double[] a, double[] b)
-    {
-	double[] c = new double[Math.max(a.length, b.length)];
-	for (int i = 0; i < a.length && i < b.length; i++)
-	    {
-		c[i] = a[i] + b[i];
-	    }
-	return c;
-    }
-    
-    public double[] arrayMultiply (double[] a, double b)
-    {
-	for (int i = 0; i < a.length; i++)
-	    {
-		a[i] = a[i] * b;
-	    }
-	return a;
-    }
+
 }
 	
 
