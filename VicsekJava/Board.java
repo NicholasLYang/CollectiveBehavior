@@ -5,6 +5,7 @@ public class Board
 {
     private double size;
     private Agent[] agents;
+    private Operator o;
     private Random rand;
     private double radius;
     private double speed;
@@ -14,6 +15,7 @@ public class Board
     // # of agents, area of board, radius of interaction, speed of agents and eta
     public Board (int n, int sizeOfGraph, double r, double s, double e, double b, double rR)
     {
+	o = new Operator();
 	rand = new Random();
 	agents = new Agent[n];
 	size = sizeOfGraph;
@@ -25,6 +27,7 @@ public class Board
 	for (int i = 0; i < n; i++)
 	    {
 		agents[i] = new Agent(sizeOfGraph, s);
+
 	    }
 	radius = 0;
     }
@@ -33,7 +36,7 @@ public class Board
 	String out = new String();
 	for (int i = 0; i < agents.length; i++)
 	    {
-		out = out + "Agent " + i + " (" + String.format("%.5g", agents[i].getX()) + ", " + String.format("%.5g", agents[i].getY()) + ") d =" + String.format("%.5g", agents[i].getDirection()) + "   ";
+		out = out + "Agent " + i + " r = " + String.format("%.5g", agents[i].getR()) + " theta = " + String.format("%.5g", agents[i].getTheta()) + " d =" + String.format("%.5g", agents[i].getDirection()) + "   ";
 		if (i % 2 == 0)
 		    {
 			out = out + "\n";
@@ -71,9 +74,30 @@ public class Board
 	eta = d;
     }
 
-
-
     public void Vicsek()
+    {
+	double sumOfDirections;
+	Agent[] neighbors;
+	for (int i = 0; i < agents.length; i++)
+	    {
+		sumOfDirections = 0;
+		neighbors = agents[i].findNeighbors(agents, radius);
+		for (int j = 0; j < neighbors.length; j++)
+		    {
+			sumOfDirections = sumOfDirections + neighbors[j].getDirection();
+		    }
+		double newDirection = sumOfDirections/neighbors.length;
+		if (neighbors.length == 0)
+		    newDirection = 0;
+		agents[i].setDirection(newDirection);
+		// System.out.println("Agent " + i + " has direction " + sumOfDirections/neighbors.length);
+		agents[i].move();
+	    }
+;
+    }
+
+    // Right now doesn't work. One paper claims this is equivalent to the method above.
+    public void Vicsek1()
     {
 
 	Vector sumOfVelocity;
@@ -84,15 +108,14 @@ public class Board
 		neighbors = agents[j].findNeighbors(agents, radius);
 		for (int c = 0; c < neighbors.length; c++)
 		    {
-			sumOfVelocity.add(neighbors[c].getVelocity());
+			o.add(sumOfVelocity, neighbors[c].getVelocity());
 		    }
-		double newDirection = mod(sumOfVelocity.scalarMultiplication(1/neighbors.length).getTheta() + eta * Math.PI * (1 - 2 * rand.nextDouble()),  Math.PI);
-	
-		double newX = (agents[j].getX() + speed * Math.cos(agents[j].getDirection())) % size;
-		double newY = (agents[j].getY() + speed * Math.sin(agents[j].getDirection())) % size;
-		agents[j].setX(newX);
-		agents[j].setY(newY);
-		agents[j].set(newDirection);
+		Vector newVelocity = o.scalarMultiplication(o.normalize(sumOfVelocity), speed);
+		System.out.println(newVelocity);
+		o.rotate(newVelocity, 2 * Math.PI * rand.nextDouble() * eta);
+		agents[j].setVelocity(newVelocity);
+		Vector newPosition = o.add(agents[j].getPosition(), newVelocity);
+
 			
 	    }
 	    
@@ -149,6 +172,7 @@ public double mod (double x, double n)
     {
 	return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
     }
+ 
 
 }
 	

@@ -7,11 +7,12 @@ public class Vector
 
     // Coords is an array with the x coord being the first term and the y coord being the second term
     private double[] coords;
-
+    private Operator o;
     private double theta;
     private double r;
     public Vector (double[] a)
     {
+	o = new Operator();
 	coords = Arrays.copyOfRange(a, 0, 2);
 	theta = Math.atan2(a[1], a[0]);
 	if (a[0] == 0)
@@ -21,7 +22,7 @@ public class Vector
 		else
 		    theta =  3 * Math.PI/2;
 	    }
-	r = norm(coords);
+	r = o.length(coords);
     }
     public Vector (double r1, double d1)
     {
@@ -40,9 +41,11 @@ public class Vector
     }
 	
 		
-
+    public String toString()
+    {
+	return "R = " + r + " Theta = " + theta;
+    }
  
-
     // ---------- Get/Set Methods ---------- \\
     public double getTheta()
     {
@@ -52,6 +55,8 @@ public class Vector
     public void setTheta(double d)
     {
 	theta = d;
+	theta = o.mod(theta, 2 * Math.PI);
+	coords = new double[] {r * Math.cos(theta), r * Math.sin(theta)};
     }
     public double getR()
     {
@@ -61,15 +66,25 @@ public class Vector
     public void setR(double d)
     {
 	r = d;
+	coords = new double[] {r * Math.cos(theta), r * Math.sin(theta)};
     }
     public double[] getCoords()
     {
 	return coords;
     }
 
-    public void setCoords(double[] d)
+    public void setCoords(double[] a)
     {
-	coords = Arrays.copyOfRange(d, 0, 2);
+	coords = Arrays.copyOfRange(a, 0, 2);
+	theta = Math.atan2(a[1], a[0]);
+	if (a[0] == 0)
+	    {
+		if (a[1] > 0)
+		    theta = Math.PI/2;
+		else
+		    theta =  3 * Math.PI/2;
+	    }
+	r = o.length(coords);
     }
     public double getX()
     {
@@ -82,63 +97,18 @@ public class Vector
     }
     public void setX(double x)
     {
-	coords[0] = x;
+	
+	this.setCoords( new double[] {x, coords[1]});
+	r = o.length(coords);
+	theta = Math.atan2(coords[0], coords[1]);
     }
     public void setY(double y)
     {
-	coords[1] = y;
+	this.setCoords(new double[] {coords[0], y});
+	r = o.length(coords);
+	theta = Math.atan2(coords[0], coords[1]);
     }
-    // ---------- Useful Methods ---------- \\
-
-    public double distance (Vector v)
-    {
-	double[] c2 = v.getCoords();
-	return Math.sqrt(Math.pow(coords[1] - c2[1], 2) + Math.pow(coords[0] - c2[0], 2));
-    }
-    // returns this vector minues v
-    public Vector difference (Vector v)
-    {
-	double[] c2 = v.getCoords();
-	Vector out = new Vector(new double[] {coords[0] - c2[0], coords[1] - c2[1]});
-	return out;
-    }
-    public Vector add (Vector v)
-    {
-	double[] c2 = v.getCoords();
-	Vector out = new Vector(new double[] {coords[0] + c2[0], coords[1] + c2[1]});
-	return out;
-    }
-    public Vector scalarMultiplication(Vector v, double d)
-    {
-	double[] c = v.getCoords();                                          
-	c = new double[] {c[0] * d, c[1] * d};
-	Vector out = new Vector(c);
-	return out; 
-    }
-    public Vector scalarMultiplication(double d)
-    {
-	return this.scalarMultiplication(this, d);
-    }
-    public double norm (double[] a)
-    {
-	return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
-    }
-    public double norm (Vector v)
-    {
-	return this.norm(v.getCoords());
-    }
-    public double norm()
-    {
-	return this.norm(coords);
-    }
-    // ---------- Main Method ---------- \\
-    public static void main(String[] args)
-    {
-	double[] a = {3.0, 4.0};
-	Vector v = new Vector();
-	System.out.println(v.getR());
-
-    }
+ 
 	
 
 }
