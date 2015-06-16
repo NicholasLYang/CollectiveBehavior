@@ -98,7 +98,7 @@ public class Board
 		newDirection = newDirection + rand.nextDouble() * 2 * Math.PI * eta;
 		if (neighbors.length == 0)
 		    newDirection = 0;
-		newDirection = newDirection + BasicNoise();
+		newDirection = newDirection + AdvancedNoise();
 		agents[i].setDirection(newDirection);
 		
 		// System.out.println("Agent " + i + " has direction " + sumOfDirections/neighbors.length);
@@ -137,7 +137,7 @@ public class Board
 	return rand.nextDouble() * 2 * Math.PI * eta;
     }
     
-    public double ComplexNoise (double noise)
+    public double AdvancedNoise (double noise)
     {
 	double r = rand.nextDouble();
 	if (r > lambda)
@@ -153,7 +153,7 @@ public class Board
     //-------- Measurement --------\\
 
     
-    // Returns the norm of the rotational momentum, basically measing curvature of the agents' motion
+    // Returns the norm of the rotational momentum, basically measuring curvature of the agents' motion
     public double milling()
     {
 	double out = 0;
