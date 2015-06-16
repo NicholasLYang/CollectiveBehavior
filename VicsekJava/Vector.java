@@ -26,6 +26,7 @@ public class Vector
     }
     public Vector (double r1, double d1)
     {
+	o = new Operator();
 	r = r1;
 	theta = d1 % (2 * Math.PI);
 	if (theta > 0 && d1 < 0)

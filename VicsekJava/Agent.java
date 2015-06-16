@@ -10,23 +10,30 @@ public class Agent
     private Vector position;
     private double sizeOfBoard;
     
-    public Agent (double[] coords, double direction, int speed)
+    public Agent (double[] coords, double direction, int speed, int size)
     {
 	o = new Operator();
 	rand = new Random();
 	velocity = new Vector(speed, direction);
 	position = new Vector(coords);
+	sizeOfBoard = size;
     }
-    public Agent(int sizeOfGraph, double speed)
+    public Agent(int size, double speed)
     {
+	sizeOfBoard = size;
 	o = new Operator();
 	rand = new Random();
-	position = new Vector(new double[] {rand.nextDouble() * sizeOfGraph, rand.nextDouble() * sizeOfGraph});
+	position = new Vector(rand.nextDouble() * sizeOfBoard, rand.nextDouble() * ( 1 - 2 * Math.PI));
 	velocity = new Vector(speed, Math.PI * (1 - 2 * rand.nextDouble()));
+
+    }
+    public Agent()
+    {
+	this(1, 0.25);
     }
     public String toString()
     {
-	return "Position: " + position + " Velocity: " + velocity;
+	return "\n" + "   Position: " + position + "\n" + "   Velocity: " + velocity;
     }
     
     // ---------- Get/Set Methods ---------- \\
@@ -109,14 +116,16 @@ public class Agent
     }
     // ---------- Vicsek ---------- \\	
     // Finds neighbors in a given arraylist of neighbors
-    public Agent[] findNeighbors (Agent[] agents, double radius)
+    public double findNeighbors (Agent[] agents, double radius)
     {
-	ArrayList<Agent> out = new ArrayList<Agent>();
+	double d = 0;
+	// ArrayList<Agent> out = new ArrayList<Agent>();
 	for (int i = 0; i < agents.length; i++)
 	    {
 		if (o.distance(position, agents[i].getPosition()) <= radius)
 		    {
-			out.add(agents[i]);
+			out = out + agents[i].getDirection() ;
+			    // out.add(agents[i]);
 		    }
 	    }
 	Agent[] a = new Agent[out.size()];
@@ -129,7 +138,10 @@ public class Agent
     public void move()
     {
 	position = o.add(position, velocity);
-
+	double[] c = position.getCoords();
+	
+	position = new Vector(new double[]{ c[0] % (sizeOfBoard), c[1] % (sizeOfBoard)});
+	
 	
     }
     // ---------- Additions to Vicsek ---------- \\	

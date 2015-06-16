@@ -12,6 +12,7 @@ public class Board
     private double eta;
     private double beta;
     private double repulsionRange;
+    private double lambda, alpha, gamma;
     // # of agents, area of board, radius of interaction, speed of agents and eta
     public Board (int n, int sizeOfGraph, double r, double s, double e, double b, double rR)
     {
@@ -29,22 +30,28 @@ public class Board
 		agents[i] = new Agent(sizeOfGraph, s);
 
 	    }
-	radius = 0;
+	lambda = 0;
+	alpha = 0;
+	gamma = 0;
+    }
+    public void setUpAdvancedNoise (double l, double a, double g)
+    {
+	lambda = l;
+	alpha = a;
+	gamma = g;
     }
     public String toString()
     {
 	String out = new String();
-	for (int i = 0; i < agents.length; i++)
+	for (int i = 0; i < agents.length; i = i + 200)
 	    {
-		out = out + "Agent " + i + " r = " + String.format("%.5g", agents[i].getR()) + " theta = " + String.format("%.5g", agents[i].getTheta()) + " d =" + String.format("%.5g", agents[i].getDirection()) + "   ";
-		if (i % 2 == 0)
-		    {
-			out = out + "\n";
-		    }
+		out = out + "Agent " + i + "| Position: r = " + String.format("%.5g", agents[i].getR()) + " θ = " + String.format("%.5g", agents[i].getTheta()) + " direction =" + String.format("%.5g", agents[i].getDirection()) + "\n";
+
 	    }
 	return out + "\n";
     }
     //----------- Get/Set Methods -----------\\
+    
     public double getRadius()
     {
 	return radius;
@@ -76,6 +83,7 @@ public class Board
 
     public void Vicsek()
     {
+
 	double sumOfDirections;
 	Agent[] neighbors;
 	for (int i = 0; i < agents.length; i++)
@@ -84,12 +92,15 @@ public class Board
 		neighbors = agents[i].findNeighbors(agents, radius);
 		for (int j = 0; j < neighbors.length; j++)
 		    {
-			sumOfDirections = sumOfDirections + neighbors[j].getDirection();
+			sumOfDirections = sumOfDirections + agents[j].getDirection();
 		    }
 		double newDirection = sumOfDirections/neighbors.length;
+		newDirection = newDirection + rand.nextDouble() * 2 * Math.PI * eta;
 		if (neighbors.length == 0)
 		    newDirection = 0;
+		newDirection = newDirection + BasicNoise();
 		agents[i].setDirection(newDirection);
+		
 		// System.out.println("Agent " + i + " has direction " + sumOfDirections/neighbors.length);
 		agents[i].move();
 	    }
@@ -120,7 +131,25 @@ public class Board
 	    }
 	    
     }
+    // Random rotation from 0 to 2πη
+    public double BasicNoise ()
+    {
+	return rand.nextDouble() * 2 * Math.PI * eta;
+    }
     
+    public double ComplexNoise (double noise)
+    {
+	double r = rand.nextDouble();
+	if (r > lambda)
+	    {
+		r = 0;
+	    }
+	else
+	    {
+		r = 1;
+	    }
+	return (1 - alpha) * noise + rand.nextDouble() + gamma * r;
+    }
     //-------- Measurement --------\\
 
     
@@ -130,7 +159,7 @@ public class Board
 	double out = 0;
 	for (int i = 0; i < agents.length; i++)
 	    {
-		out = out + (agents[i].getX() * Math.sin(agents[i].getDirection()) - agents[i].getY() * Math.cos(agents[i].getDirection()))/norm(agents[i].getCoords());
+		out = out + (agents[i].getX() * Math.sin(agents[i].getDirection()) - agents[i].getY() * Math.cos(agents[i].getDirection()))/(o.norm(agents[i].getPosition()) * speed);
 	    }
 	return out/agents.length;
     }
@@ -143,7 +172,7 @@ public class Board
 		sum[0] = sum[0] + Math.cos(agents[i].getDirection());
 		sum[1] = sum[1] + Math.sin(agents[i].getDirection());
 	    }
-	double out = norm(sum)/agents.length;
+	double out = o.length(sum)/agents.length;
 	return out;
     }
     public double cohesion()
@@ -151,27 +180,11 @@ public class Board
 	double sum = 0;
 	for (int i = 0; i < agents.length; i++)
 	    {
-		sum = sum + Math.pow(Math.E, (-1 * norm(agents[i].getCoords())/(4 * radius)));
+		sum = sum + Math.pow(Math.E, (-1 * o.length(agents[i].getCoords())/(4 * radius)));
 	    }
 	return sum/agents.length;
     }
-    //------------ Useful Methods ------------\\
 
-// Because the build in java mod doesn't work with negatives. Basically d % m
-public double mod (double x, double n)
-{
-    double r = x % n;
-    if (r > 0 && x < 0)
-	{
-	    r -= n;
-	}
-    return r;
-}
-	    
-    public double norm (double[] a)
-    {
-	return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
-    }
  
 
 }
