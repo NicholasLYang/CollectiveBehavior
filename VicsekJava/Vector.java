@@ -44,7 +44,7 @@ public class Vector
 		
     public String toString()
     {
-	return "R = " + r + " Theta = " + theta;
+	return "R = " + String.format("%.5g", r) + " Theta = " + String.format("%.5g", theta) + " " + "(" + coords[0] + ", " + coords[1] + ")";
     }
  
     // ---------- Get/Set Methods ---------- \\

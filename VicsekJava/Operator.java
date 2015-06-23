@@ -1,8 +1,9 @@
 public class Operator
 {
-    public void rotate(Vector v, double d)
+    public Vector rotate(Vector v, double d)
     {
 	v.setTheta(mod(v.getTheta() + d, 2 * Math.PI));
+	return v;
 	
     }
     public double distance (Vector v1, Vector v2)
@@ -32,6 +33,10 @@ public class Operator
 	c = new double[] {c[0] * d, c[1] * d};
 	Vector out = new Vector(c);
 	return out; 
+    }
+    public Vector flip(Vector v)
+    {
+	return new Vector(v.getR(), v.getTheta() + Math.PI);
     }
     public double length(double[] a)
     {

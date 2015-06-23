@@ -1,0 +1,30 @@
+
+X = zeros(5, 500);
+Y = zeros(5, 500);
+U = zeros(5, 500);
+V = zeros(100, 500);
+
+for i = 1:100
+
+   xfile = strcat('x', num2str(i), '.txt'); 
+   yfile = strcat('y', num2str(i), '.txt');
+   ufile = strcat('u', num2str(i), '.txt');
+   vfile = strcat('v', num2str(i), '.txt');
+   X(i, :) = importdata(xfile, ' ');
+   Y(i, :) = importdata(yfile, ' ');
+   U(i, :) = importdata(ufile, ' ');
+   V(i, :) = importdata(vfile, ' ');
+   fprintf('%d\n', i);
+end
+
+        
+for j = 1:1000  
+    quiver(X(1:5, j), Y(1:5, j), U(1:5, j), V(1:5, j), 0.25);
+    axis([-200,200,-200,200]);
+    fprintf('%d\n', j);
+    pause(0.5);
+end
+
+
+
+   

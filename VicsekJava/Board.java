@@ -3,55 +3,69 @@ import java.util.*;
 
 public class Board
 {
+    /*
+      The board is the space in which the agents move around. The shape of the board can vary. 
+      Right now it is closed circle, but previously it was a square that wrapped around. 
+      Thus, size has different meanings depending on the shape. Right now it is the radius of the board.
+      Operator is a class that can perform basic vector operations along with a few other tasks such as a modified modulus. 
+      Rand generates random variables. Radius is the radius of interaction for the agents. Speed is the speed of all the agents. 
+      Eta is the noise parameter, regulating the extent to which noise affects the agents. Beta is 
+    */
     private double size;
     private Agent[] agents;
     private Operator o;
     private Random rand;
     private double radius;
     private double speed;
-    private double eta;
-    private double beta;
     private double repulsionRange;
-    private double lambda, alpha, gamma;
-    // # of agents, area of board, radius of interaction, speed of agents and eta
-    public Board (int n, int sizeOfGraph, double r, double s, double e, double b, double rR)
+    private double alpha, beta, gamma, eta, lambda, sigma, tau;
+    private double[] noise;
+    public Board (int n, int sizeOfBoard, double radius, double repulsionRange, double speed, double alpha, double beta, double gamma, double eta, double lambda, double sigma, double tau)
     {
 	o = new Operator();
 	rand = new Random();
 	agents = new Agent[n];
-	size = sizeOfGraph;
-	speed = s;
-	radius = r;
-	eta = e;
-	beta = b;
-	repulsionRange = rR;
+	size = sizeOfBoard;
+	this.radius = radius;
+	this.repulsionRange = repulsionRange;
+	this.speed = speed;
+	this.alpha = alpha;
+	this.beta = beta;
+	this.gamma = gamma;
+	this.eta = eta;
+	this.lambda = lambda;
+	this.sigma = sigma;
+	this.tau = tau;
+       
 	for (int i = 0; i < n; i++)
 	    {
-		agents[i] = new Agent(sizeOfGraph, s);
-
+		agents[i] = new Agent(sizeOfBoard, speed);
 	    }
-	lambda = 0;
-	alpha = 0;
-	gamma = 0;
+	noise = new double[n];
     }
-    public void setUpAdvancedNoise (double l, double a, double g)
+    public Board()
     {
-	lambda = l;
-	alpha = a;
-	gamma = g;
+	this(10, 10, 0, 0, 0, 0, 0, 0.4, 0.5, 0.3, 0, 0);
     }
     public String toString()
     {
-	String out = new String();
-	for (int i = 0; i < agents.length; i = i + 200)
+	String out = "Size: " + size + "\n";
+	for (int i = 0; i < agents.length; i++)
 	    {
-		out = out + "Agent " + i + "| Position: r = " + String.format("%.5g", agents[i].getR()) + " θ = " + String.format("%.5g", agents[i].getTheta()) + " direction =" + String.format("%.5g", agents[i].getDirection()) + "\n";
+		out = out + "Agent " + i + "| Position: r = " + String.format("%.5g", agents[i].getR()) + " θ = " + String.format("%.5g", agents[i].getTheta()) + " direction =" + String.format("%.5g", agents[i].getDirection()) +  " (" + String.format("%.5g", agents[i].getX()) + ", " +  String.format("%.5g", agents[i].getY()) + ")" + "\n";
 
 	    }
 	return out + "\n";
     }
     //----------- Get/Set Methods -----------\\
-    
+    public Agent[] getAgents()
+    {
+	return agents;
+    }
+    public void setAgents(Agent[] a)
+    {
+	agents = a;
+    }
     public double getRadius()
     {
 	return radius;
@@ -65,7 +79,7 @@ public class Board
     {
 	return speed;
     }
-
+    
     public void setSpeed(double d)
     {
 	speed = d;
@@ -80,67 +94,106 @@ public class Board
     {
 	eta = d;
     }
-
-    public void Vicsek()
+    public double getNoise(int i)
     {
-
-	double sumOfDirections;
-	Agent[] neighbors;
+	return noise[i];
+    }
+    public double[] getNoise()
+    {
+	return noise;
+    }
+    // runs Vicsek for a given time interval. 
+    public void Vicsek(double time)
+    {
+	AdvancedNoise();
+	Vector sumDiffVelocity, repulsion, newVelocity;
 	for (int i = 0; i < agents.length; i++)
 	    {
-		sumOfDirections = 0;
-		neighbors = agents[i].findNeighbors(agents, radius);
-		for (int j = 0; j < neighbors.length; j++)
-		    {
-			sumOfDirections = sumOfDirections + agents[j].getDirection();
-		    }
-		double newDirection = sumOfDirections/neighbors.length;
-		newDirection = newDirection + rand.nextDouble() * 2 * Math.PI * eta;
-		if (neighbors.length == 0)
-		    newDirection = 0;
-		newDirection = newDirection + AdvancedNoise();
-		agents[i].setDirection(newDirection);
-		
-		// System.out.println("Agent " + i + " has direction " + sumOfDirections/neighbors.length);
-		agents[i].move();
+		sumDiffVelocity = agents[i].sumDiffVelocity(agents, radius);
+		repulsion = agents[i].sumOfRepulsion(agents, repulsionRange);
+		newVelocity = o.add(sumDiffVelocity, o.scalarMultiplication(repulsion, beta));
+		newVelocity = o.scalarMultiplication(o.normalize(newVelocity), speed);
+		newVelocity.setTheta(newVelocity.getTheta() + eta * noise[i]);
+		newVelocity.setR(speed);
+		agents[i].setVelocity(newVelocity);
+		agents[i].move(time);
+		sumDiffVelocity = new Vector();
+		repulsion = new Vector();
+		newVelocity = new Vector();
 	    }
-;
     }
-
-    // Right now doesn't work. One paper claims this is equivalent to the method above.
-    public void Vicsek1()
+    public void Vicsek2(double time)
     {
-
-	Vector sumOfVelocity;
-	Agent[] neighbors;
-	for (int j = 0; j < agents.length; j++)
+	AdvancedNoise2(time);
+        wallAvoidance(time);
+	Vector repulsion;
+	Vector newVelocity;
+	for (int i = 0; i < agents.length; i++)
 	    {
-		sumOfVelocity = new Vector();
-		neighbors = agents[j].findNeighbors(agents, radius);
-		for (int c = 0; c < neighbors.length; c++)
-		    {
-			o.add(sumOfVelocity, neighbors[c].getVelocity());
-		    }
-		Vector newVelocity = o.scalarMultiplication(o.normalize(sumOfVelocity), speed);
-		System.out.println(newVelocity);
-		o.rotate(newVelocity, 2 * Math.PI * rand.nextDouble() * eta);
-		agents[j].setVelocity(newVelocity);
-		Vector newPosition = o.add(agents[j].getPosition(), newVelocity);
-
-			
+		// Gets the sum of the agents' velocity within a certain radius
+		newVelocity = agents[i].sumOfVelocity(agents, radius);
+		// Gets the sum of the repulsion vectors from agents within a certain radius, multiplies it by beta
+		repulsion = o.scalarMultiplication(agents[i].sumOfRepulsion(agents, repulsionRange), beta);
+		newVelocity = o.add(newVelocity, repulsion);
+		newVelocity = o.normalize(newVelocity);
+		newVelocity = o.rotate(newVelocity, eta * noise[i]);
+		newVelocity = o.scalarMultiplication(newVelocity, speed);
+		agents[i].setVelocity(newVelocity);
+		agents[i].move(time);
 	    }
-	    
     }
-    // Random rotation from 0 to 2πη
-    public double BasicNoise ()
+    public void Vicsek3(double time)
     {
-	return rand.nextDouble() * 2 * Math.PI * eta;
+	BasicNoise();
+	for (int i = 0; i < agents.length; i++)
+	    {
+		ArrayList<Agent> a = agents[i].findNeighbors(agents, radius);
+		double sum = 0;
+		for (int j = 0; j < a.size(); j++)
+		    {
+			sum = sum + a.get(j).getDirection();
+		    }
+		agents[i].setDirection(sum * noise[i]/a.size());
+		agents[i].move(time);
+	    }
     }
     
-    public double AdvancedNoise (double noise)
+    //-------- Vicsek Components --------\\
+    // Random rotation from 0 to 2πη
+    public void BasicNoise ()
+    {
+	for (int i = 0; i < noise.length; i++)
+	    {
+		noise[i] = rand.nextDouble() * 2 * Math.PI;
+
+	    }
+    }
+
+    public void AdvancedNoise()
+    {
+	/* 
+	   Takes previous noise, multiplies it by 1 - alpha (basically how much the previous noise affects the current noise)
+	   then with probability lambda adds gamma. Also adds a random number from 0 to 1
+	*/
+	for (int i = 0; i < noise.length; i++)
+	    {
+		
+		double r = rand.nextDouble();
+		if (r > lambda)
+		    {
+			r = 0;
+		    }
+		else
+		    {
+			r = 1;
+		    }
+		noise[i] = (1 - alpha) * noise[i] + rand.nextDouble() + gamma * r;
+	    }
+    }
+    public void AdvancedNoise2(double time)
     {
 	double r = rand.nextDouble();
-	if (r > lambda)
+	if (r > lambda * time)
 	    {
 		r = 0;
 	    }
@@ -148,8 +201,56 @@ public class Board
 	    {
 		r = 1;
 	    }
-	return (1 - alpha) * noise + rand.nextDouble() + gamma * r;
+	for (int i = 0; i < noise.length; i++)
+	    {
+		noise[i] = noise[i] * Math.exp(-alpha * time) + Math.sqrt(Math.pow(sigma, 2)/(2 * alpha) * (1 - Math.exp(-2 * alpha * time)) * time) * (1 - 2 * rand.nextDouble()) + gamma * r * (1 - 2 * rand.nextDouble());
+	    }
     }
+	
+    public void bounds()
+    {
+	// for a circle
+	for (int i = 0; i < agents.length; i++)
+	    {
+
+		if (agents[i].getR() > size)
+		    agents[i].setR(size);
+		
+	    }
+    }
+    public void bounds2()
+    {
+	// for a square
+	for (int i = 0; i < agents.length; i++)
+	    {
+		if (agents[i].getX() > size)
+		    agents[i].setX(-size);
+		if (agents[i].getY() > size)
+		    agents[i].setY(-size);
+		if (agents[i].getX() < -size)
+		    agents[i].setX(size);
+		if (agents[i].getY() < -size)
+		    agents[i].setY(size);
+	    }
+    }
+			
+    public void wallAvoidance(double time)
+    {
+	// Adds wall avoidance to the agent's noise
+	for (int i = 0; i < agents.length; i++)
+	    {
+		noise[i] = noise[i] + (1 - Math.exp(-time / tau)) * 3 * Math.exp(-1.5 * distanceFromWall(agents[i]));
+	    }
+    }
+    public double distanceFromWall(Agent a)
+    {
+	// For a circular board, the distance from a wall is simply radius minus the distance from the origin 
+	return size - a.getR();
+    }
+    
+
+							  
+
     //-------- Measurement --------\\
 
     
@@ -166,14 +267,12 @@ public class Board
     // Measures whether the agents are all going in the same direction
     public double polarization()
     {
-	double[] sum = new double[2];
+	Vector out = new Vector();
 	for (int i = 0; i < agents.length; i++)
 	    {
-		sum[0] = sum[0] + Math.cos(agents[i].getDirection());
-		sum[1] = sum[1] + Math.sin(agents[i].getDirection());
+		out = o.add(out, o.normalize(agents[i].getVelocity()));
 	    }
-	double out = o.length(sum)/agents.length;
-	return out;
+	return (o.norm(out)/agents.length);
     }
     public double cohesion()
     {

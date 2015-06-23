@@ -8,24 +8,26 @@ public class Agent
     private Operator o;
     private Vector velocity;
     private Vector position;
+    private double speed;
     private double sizeOfBoard;
-    
-    public Agent (double[] coords, double direction, int speed, int size)
+    //  private double noise;
+    public Agent (double[] coords, double direction, int s, int size)
     {
 	o = new Operator();
 	rand = new Random();
-	velocity = new Vector(speed, direction);
+	velocity = new Vector(s, direction);
 	position = new Vector(coords);
 	sizeOfBoard = size;
+	speed = s;
     }
-    public Agent(int size, double speed)
+    public Agent(int size, double s)
     {
 	sizeOfBoard = size;
 	o = new Operator();
 	rand = new Random();
 	position = new Vector(rand.nextDouble() * sizeOfBoard, rand.nextDouble() * ( 1 - 2 * Math.PI));
-	velocity = new Vector(speed, Math.PI * (1 - 2 * rand.nextDouble()));
-
+	velocity = new Vector(s, Math.PI * (1 - 2 * rand.nextDouble()));
+	speed = s;
     }
     public Agent()
     {
@@ -114,44 +116,75 @@ public class Agent
     {
 	return position.getCoords();
     }
-    // ---------- Vicsek ---------- \\	
-    // Finds neighbors in a given arraylist of neighbors
-    public double findNeighbors (Agent[] agents, double radius)
+    /*
+    public double getNoise()
     {
-	double d = 0;
-	// ArrayList<Agent> out = new ArrayList<Agent>();
+	return noise;
+    } 
+    public void setNoise(double d)
+    {
+	noise = d;
+    }
+    */
+
+    // ---------- Vicsek ---------- \\	
+    // Finds the sum of neighbors' directions given array of agents and radius
+    public ArrayList<Agent> findNeighbors (Agent[] agents, double radius)
+    {
+       
+	ArrayList<Agent> out = new ArrayList<Agent>();
 	for (int i = 0; i < agents.length; i++)
 	    {
 		if (o.distance(position, agents[i].getPosition()) <= radius)
 		    {
-			out = out + agents[i].getDirection() ;
-			    // out.add(agents[i]);
+			out.add(agents[i]);
 		    }
 	    }
-	Agent[] a = new Agent[out.size()];
-	for (int j = 0; j < out.size(); j++)
-	    {
-		a[j] = out.get(j);
-	    }
-	return a;
+	return out;
     }
-    public void move()
+    public Vector sumDiffVelocity(Agent[] agents, double radius)
     {
-	position = o.add(position, velocity);
+	ArrayList<Agent> a = findNeighbors(agents, radius);
+	Vector out = new Vector();
+	for (int i = 0; i < a.size(); i++)
+	    {
+		out = o.add(o.difference(a.get(i).getVelocity(), velocity), out);
+	    }
+	return out;
+    }
+    public Vector sumOfVelocity(Agent[] agents, double radius)
+    {
+	ArrayList<Agent> a = findNeighbors(agents, radius);
+	Vector out = new Vector();
+	for ( int i = 0; i < a.size(); i++)
+	    {
+		out = o.add(out, a.get(i).getVelocity());
+	    }
+	return out;
+    }
+	    
+    public void move(double time)
+    {
+	position = o.add(position, o.scalarMultiplication(velocity, time));
 	double[] c = position.getCoords();
 	
-	position = new Vector(new double[]{ c[0] % (sizeOfBoard), c[1] % (sizeOfBoard)});
-	
-	
     }
-    // ---------- Additions to Vicsek ---------- \\	
-    public Vector repulsion (Agent a, double range)
+    // Takes an array of agents, runs it through findNeighbors, then calculates the repulsion from all of them.
+    public Vector sumOfRepulsion (Agent[] a, double range)
     {
-	Vector e = o.normalize(o.difference(position, a.getPosition()));
-	double c = Math.pow((1 + Math.pow(Math.E, o.norm(o.difference(position, a.getPosition()))/range - 2)), -1);
-	return o.scalarMultiplication(e, c);
+	Vector out = new Vector();
+	ArrayList<Agent> agents = findNeighbors(a, range);
+	for (int i = 0; i < agents.size(); i++)
+	    {
+		Vector e = o.normalize(o.difference(position, agents.get(i).getPosition()));
+		double c = Math.pow((1 + Math.exp(o.distance(position, agents.get(i).getPosition())/range - 2)), -1);
+		out = o.add(out, o.scalarMultiplication(e, c));
+	    }
+	return out;
     }
 
+
+	
 
 
 	    
