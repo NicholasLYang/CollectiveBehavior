@@ -6,15 +6,16 @@ public class Driver
     public static void main(String[] args)
     {
 	
-
+	int n = Integer.parseInt(args[0]);
+	int frames = 500;
 	//  Board (# of Agents, size of Board, radius, repulsion range, speed, alpha, beta, gamma, eta, lambda, sigma, tau)
 	double d = 0;
 	double p;
-	String[] y = new String[1000];
-	String[] x = new String[1000];
-	String[] u = new String[1000];
-	String[] v = new String[1000];
-	for (int i = 0; i < 1000; i++)
+	String[] y = new String[n];
+	String[] x = new String[n];
+	String[] u = new String[n];
+	String[] v = new String[n];
+	for (int i = 0; i < n; i++)
 	    {
 		x[i] = new String();
 		y[i] = new String();
@@ -22,8 +23,8 @@ public class Driver
 		v[i] = new String();
 	    }
 	String noise = new String();
-       	Board b = new Board(1000, 100, 5, 3, 10, 0.8, 0.4, 0.05, 0.2, 0.01, 0.05, 0.2);
-	for (int i = 0; i < 500; i++)
+       	Board b = new Board(n, 500, 50, 15, 50, 0.8, 0.8, 0.05, 0.2, 0.01, 0.05, 0.2);
+	for (int i = 0; i < frames; i++)
 	    {
 
 		Agent[] agents = b.getAgents();
@@ -31,7 +32,7 @@ public class Driver
 		b.bounds();
 		p = b.polarization();
 		d = d + p;
-		for (int j = 0; j < 1000; j++)
+		for (int j = 0; j < n; j++)
 		    {
 			x[j] = x[j] + agents[j].getX() + " ";
 			y[j] = y[j] + agents[j].getY() + " ";
@@ -52,7 +53,7 @@ public class Driver
 	    }
 	System.out.println(noise);
 	PrintStream printY, printX, printU, printV;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < n; i++)
 	    {
 		try
 		    {
@@ -73,11 +74,8 @@ public class Driver
 		catch (Exception e)
 		    { }
 	    }
-
-	    
-
     }
-	
+    
 
 }
 

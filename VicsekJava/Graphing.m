@@ -1,10 +1,12 @@
-
-X = zeros(1000, 500);
-Y = zeros(1000, 500);
-U = zeros(1000, 500);
-V = zeros(1000, 500);
-
-for i = 1:100
+s = 500; 
+n = 1000;
+scale = 0.5;
+X = zeros(n, 500);
+Y = zeros(n, 500);
+U = zeros(n, 500);
+V = zeros(n, 500);
+open(writerObj);
+for i = 1:n
 
    xfile = strcat('x', num2str(i), '.txt'); 
    yfile = strcat('y', num2str(i), '.txt');
@@ -17,19 +19,20 @@ for i = 1:100
    fprintf('%d\n', i);
 end
 
-
         
 for j = 1:500
   
-    quiver(X(1:100, j), Y(1:100, j), U(1:100, j), V(1:100, j), 0.25);
-    axis([-200,200,-200,200]);
+    quiver(X(1:n, j), Y(1:n, j), scale * U(1:n, j), scale * V(1:n, j), 'AutoScale','off');
+    axis equal 
+    axis([-600,600,-600,600 ]);
     hold on
-    Circle(0, 0, 110);
+    Circle(0, 0, 550);
     hold off
+    F(j) = getframe;
     fprintf('%d\n', j);
-    pause(0.5);
 end
 
+movie2avi(F, 'Vicsek.avi')
 
 
    

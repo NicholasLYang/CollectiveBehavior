@@ -135,9 +135,8 @@ public class Board
 		// Gets the sum of the repulsion vectors from agents within a certain radius, multiplies it by beta
 		repulsion = o.scalarMultiplication(agents[i].sumOfRepulsion(agents, repulsionRange), beta);
 		newVelocity = o.add(newVelocity, repulsion);
-		newVelocity = o.normalize(newVelocity);
 		newVelocity = o.rotate(newVelocity, eta * noise[i]);
-		newVelocity = o.scalarMultiplication(newVelocity, speed);
+		newVelocity.setR(speed);
 		agents[i].setVelocity(newVelocity);
 		agents[i].move(time);
 	    }
